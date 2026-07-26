@@ -16,7 +16,10 @@ type DocumentGalleryProps = {
 
 export default function DocumentGallery({ items }: DocumentGalleryProps) {
   const images = useMemo(
-    () => items.filter((i) => i.type === "image").map((i) => ({ src: i.src, title: i.title })),
+    () =>
+      items
+        .filter((i) => i.type === "image")
+        .map((i) => ({ src: i.src, title: "" })),
     [items]
   );
   const [lightboxIndex, setLightboxIndex] = useState<number | null>(null);
@@ -38,13 +41,10 @@ export default function DocumentGallery({ items }: DocumentGalleryProps) {
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     src={item.src}
-                    alt={item.title}
+                    alt=""
                     className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.03]"
                     loading="lazy"
                   />
-                </div>
-                <div className="px-4 py-3">
-                  <p className="truncate text-sm text-ink-muted">{item.title}</p>
                 </div>
               </button>
             );
@@ -55,7 +55,7 @@ export default function DocumentGallery({ items }: DocumentGalleryProps) {
               key={item.filename}
               className="flex flex-col justify-between rounded-xl border border-ink/8 bg-white/60 p-5 shadow-sm transition-shadow hover:shadow-md"
             >
-              <div className="flex items-start gap-3">
+              <div className="flex items-center gap-3">
                 <div
                   className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-accent-pale text-accent"
                   aria-hidden="true"
@@ -66,10 +66,7 @@ export default function DocumentGallery({ items }: DocumentGalleryProps) {
                     <path d="M8 13h8M8 17h6" />
                   </svg>
                 </div>
-                <div className="min-w-0">
-                  <p className="truncate font-medium text-ink">{item.title}</p>
-                  <p className="mt-0.5 text-xs uppercase tracking-wide text-ink-light">PDF</p>
-                </div>
+                <p className="text-xs uppercase tracking-wide text-ink-light">PDF</p>
               </div>
               <a
                 href={item.src}
