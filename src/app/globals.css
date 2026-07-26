@@ -1,0 +1,52 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-cream text-ink antialiased;
+  }
+
+  ::selection {
+    @apply bg-accent-pale text-ink;
+  }
+}
+
+@layer utilities {
+  .section-fade {
+    opacity: 0;
+    animation: fadeUp 0.7s ease-out forwards;
+  }
+}
+
+/* Custom audio range - minimal cross-browser thumb */
+input[type="range"].audio-range {
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+input[type="range"].audio-range::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 9999px;
+  background: #7a3b3b;
+  border: 2px solid #faf8f5;
+  box-shadow: 0 0 0 1px rgba(122, 59, 59, 0.35);
+  cursor: pointer;
+}
+
+input[type="range"].audio-range::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 9999px;
+  background: #7a3b3b;
+  border: 2px solid #faf8f5;
+  box-shadow: 0 0 0 1px rgba(122, 59, 59, 0.35);
+  cursor: pointer;
+}
