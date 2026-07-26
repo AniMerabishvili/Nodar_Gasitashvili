@@ -126,8 +126,31 @@ function generateGallery() {
     return;
   }
 
+  const metaPath = path.join(dir, "meta.json");
+  const meta = fs.existsSync(metaPath)
+    ? JSON.parse(fs.readFileSync(metaPath, "utf8"))
+    : { groups: {}, images: {} };
+
   function isImageFile(name) {
     return IMAGE_EXT.has(path.extname(name).toLowerCase());
+  }
+
+  function folderTitle(name, rel) {
+    const fromMeta = meta.groups?.[rel]?.title;
+    if (fromMeta) return fromMeta;
+    return (
+      name
+        .replace(/^(\d+)[.\s_-]+/, "")
+        .replace(/[-_]+/g, " ")
+        .replace(/\s+/g, " ")
+        .trim() || name
+    );
+  }
+
+  function imageTitle(filename, rel) {
+    const fromMeta = meta.images?.[rel]?.title;
+    if (fromMeta) return fromMeta;
+    return titleFromFilename(filename);
   }
 
   function collectImages(absDir, relDir) {
@@ -135,21 +158,21 @@ function generateGallery() {
     const images = [];
 
     for (const entry of entries) {
-      if (entry.name.startsWith(".")) continue;
+      if (entry.name.startsWith(".") || entry.name === "meta.json") continue;
       const abs = path.join(absDir, entry.name);
-      const rel = relDir ? `${relDir}/${entry.name}` : entry.name;
+      const rel = (relDir ? `${relDir}/${entry.name}` : entry.name).replace(
+        /\\/g,
+        "/"
+      );
 
       if (entry.isDirectory()) {
         images.push(...collectImages(abs, rel));
       } else if (entry.isFile() && isImageFile(entry.name)) {
         images.push({
           filename: entry.name,
-          relativePath: rel.replace(/\\/g, "/"),
-          src: publicSrc(
-            "gallery",
-            rel.replace(/\\/g, "/")
-          ),
-          title: titleFromFilename(entry.name),
+          relativePath: rel,
+          src: publicSrc("gallery", rel),
+          title: imageTitle(entry.name, rel),
           type: "image",
         });
       }
@@ -158,17 +181,14 @@ function generateGallery() {
     return images.sort((a, b) => compareFiles(a.filename, b.filename));
   }
 
-  function folderTitle(name) {
-    return name
-      .replace(/^(\d+)[.\s_-]+/, "")
-      .replace(/[-_]+/g, " ")
-      .replace(/\s+/g, " ")
-      .trim() || name;
-  }
-
   const topLevel = fs
     .readdirSync(dir, { withFileTypes: true })
-    .filter((e) => e.isDirectory() && !e.name.startsWith("."))
+    .filter(
+      (e) =>
+        e.isDirectory() &&
+        !e.name.startsWith(".") &&
+        e.name !== "meta.json"
+    )
     .sort((a, b) => compareFiles(a.name, b.name));
 
   const groups = [];
@@ -189,7 +209,7 @@ function generateGallery() {
           filename: e.name,
           relativePath: rel,
           src: publicSrc("gallery", rel),
-          title: titleFromFilename(e.name),
+          title: imageTitle(e.name, rel),
           type: "image",
         };
       });
@@ -204,23 +224,22 @@ function generateGallery() {
     }
 
     for (const sub of subdirs) {
-      const images = collectImages(
-        path.join(topAbs, sub.name),
-        `${topRel}/${sub.name}`
-      );
+      const subRel = `${topRel}/${sub.name}`.replace(/\\/g, "/");
+      const images = collectImages(path.join(topAbs, sub.name), subRel);
       if (images.length === 0) continue;
       subgroups.push({
-        title: folderTitle(sub.name),
+        title: folderTitle(sub.name, subRel),
         images,
       });
     }
 
     if (subgroups.length === 0) continue;
 
+    const groupMeta = meta.groups?.[topRel];
     groups.push({
       id: top.name.replace(/\s+/g, "-").toLowerCase(),
-      title: folderTitle(top.name),
-      order: (() => {
+      title: folderTitle(top.name, topRel),
+      order: groupMeta?.order ?? (() => {
         const m = top.name.match(/^(\d+)/);
         return m ? parseInt(m[1], 10) : 999;
       })(),
